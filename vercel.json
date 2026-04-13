@@ -3,6 +3,10 @@
     "api/rss.js": {
       "memory": 512,
       "maxDuration": 15
+    },
+    "api/recommandations.js": {
+      "memory": 512,
+      "maxDuration": 15
     }
   }
 }
