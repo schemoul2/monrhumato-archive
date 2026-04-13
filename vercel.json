@@ -4,7 +4,7 @@
       "memory": 512,
       "maxDuration": 15
     },
-    "api/recommendations.js": {
+    "api/recommandations.js": {
       "memory": 512,
       "maxDuration": 15
     }
