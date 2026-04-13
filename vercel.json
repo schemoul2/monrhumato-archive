@@ -1,6 +1,10 @@
 {
   "functions": {
-    "api/*.js": {
+    "rss.js": {
+      "memory": 512,
+      "maxDuration": 15
+    },
+    "recommandations.js": {
       "memory": 512,
       "maxDuration": 15
     }
