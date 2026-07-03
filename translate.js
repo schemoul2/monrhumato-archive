@@ -49,7 +49,7 @@ ${items}`;
         "x-api-key": process.env.ANTHROPIC_API_KEY,
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-opus-4-8",
         max_tokens: 8000,
         messages: [{ role: "user", content: prompt }],
       }),
