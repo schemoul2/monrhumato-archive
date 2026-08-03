@@ -1,0 +1,89 @@
+# Veille hebdomadaire multi-IA — MonRhumato.fr
+# Chaque lundi matin : collecte les rapports Deep Research reçus par e-mail
+# (tâches planifiées ChatGPT + Gemini), fait faire une recherche complémentaire
+# et une synthèse comparative par Claude, publie sur le site et envoie par e-mail.
+#
+# Secrets à configurer (Settings → Secrets and variables → Actions) :
+#   GMAIL_USER               — adresse Gmail
+#   GMAIL_APP_PASSWORD       — mot de passe d'application Google
+#   CLAUDE_CODE_OAUTH_TOKEN  — jeton d'abonnement Claude (commande : claude setup-token)
+
+name: Veille hebdomadaire multi-IA
+
+on:
+  schedule:
+    - cron: "23 6 * * 1" # lundi ~08h23 Paris (06:23 UTC) — après les tâches ChatGPT/Gemini de 6h
+  workflow_dispatch: {} # lancement manuel possible depuis l'onglet Actions
+
+permissions:
+  contents: write
+
+env:
+  SUJET_VEILLE: >-
+    Actualités marquantes de la semaine en rhumatologie : nouvelles publications
+    (essais randomisés, méta-analyses), recommandations de sociétés savantes
+    (EULAR, ACR, SFR, HAS), alertes de sécurité des traitements.
+
+jobs:
+  veille:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Collecte des rapports e-mail (ChatGPT / Gemini)
+        continue-on-error: true # si Gmail est indisponible, Claude fait quand même sa propre veille
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python scripts/collecte-emails.py
+
+      - name: Synthèse comparative par Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch"
+          prompt: |
+            Tu prépares la synthèse hebdomadaire de veille pour MonRhumato.fr, en FRANÇAIS.
+
+            Sujet de la veille : ${{ env.SUJET_VEILLE }}
+
+            Étapes :
+            1. Lis tous les fichiers de rapports/inbox/ : ce sont les rapports Deep Research
+               de la semaine produits par ChatGPT et Gemini, reçus par e-mail. S'il n'y en a
+               aucun, note-le et poursuis.
+            2. Fais ta PROPRE recherche complémentaire sur le sujet (WebSearch, et PubMed via
+               https://eutils.ncbi.nlm.nih.gov/entrez/eutils/ avec WebFetch ou curl) : publications
+               et annonces des 7 derniers jours uniquement.
+            3. Rédige rapports/AAAA-MM-JJ-synthese.md (date du jour, commande `date +%F`) :
+               - ## L'essentiel de la semaine — 5 à 10 points clés avec sources
+               - ## Synthèse comparative — ce que ChatGPT, Gemini et toi (Claude) avez trouvé :
+                 convergences, divergences, apports propres à chaque moteur
+               - ## Détails par thème — avec liens/références cliquables
+               - ## Sources
+               Sois factuel et cite systématiquement tes sources.
+            4. Mets à jour rapports/index.json : ajoute EN PREMIÈRE POSITION
+               {"date": "AAAA-MM-JJ", "file": "rapports/AAAA-MM-JJ-synthese.md",
+                "titre": "titre court de la semaine"} — conserve les entrées existantes.
+            5. Supprime les fichiers traités de rapports/inbox/ (pas le .gitkeep).
+
+            NE fais AUCUN commit ni push : l'étape suivante du workflow s'en charge.
+
+      - name: Publication sur le site (commit → redéploiement Vercel)
+        run: |
+          git config user.name "veille-bot"
+          git config user.email "veille-bot@users.noreply.github.com"
+          git add -A rapports
+          git diff --cached --quiet && echo "Aucune nouvelle synthèse." && exit 0
+          git commit -m "Veille hebdomadaire : synthèse du $(date +%F)"
+          git push
+
+      - name: Envoi de la synthèse par e-mail
+        continue-on-error: true
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python scripts/envoi-email.py
