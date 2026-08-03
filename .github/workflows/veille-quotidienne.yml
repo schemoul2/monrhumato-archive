@@ -19,7 +19,7 @@ permissions:
   contents: write
 
 env:
-  SITE_URL: https://monrhumato.fr # adapter si le domaine change
+  SITE_URL: https://monrhumato-veille.vercel.app # projet Vercel dédié à la veille (dépôt monrhumato-archive)
 
 jobs:
   veille:
