@@ -38,6 +38,9 @@
 </div>
 
 <script>
+// Les synthèses sont lues en direct depuis le dépôt GitHub public :
+// pas besoin de redéployer Vercel quand un nouveau rapport est commité.
+const RAW = "https://raw.githubusercontent.com/schemoul2/monrhumato-archive/main/";
 const $ = s => document.querySelector(s);
 let index = [];
 
@@ -64,13 +67,13 @@ function showList() {
 async function showReport(i) {
   $("#content").innerHTML = '<p class="empty">Chargement…</p>';
   try {
-    const text = await (await fetch("/" + index[i].file)).text();
+    const text = await (await fetch(RAW + index[i].file)).text();
     $("#content").innerHTML = `<button class="back" onclick="showList()">← Toutes les synthèses</button><div class="report">${md(text)}</div>`;
     window.scrollTo(0, 0);
   } catch { $("#content").innerHTML = '<p class="empty">Impossible de charger cette synthèse.</p>'; }
 }
 
-fetch("/rapports/index.json").then(r => r.json()).then(d => { index = d; showList(); })
+fetch(RAW + "rapports/index.json?t=" + Date.now()).then(r => r.json()).then(d => { index = d; showList(); })
   .catch(() => { $("#content").innerHTML = '<p class="empty">Index introuvable.</p>'; });
 </script>
 </body>
