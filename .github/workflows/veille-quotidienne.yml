@@ -1,0 +1,93 @@
+# Veille quotidienne multi-IA — MonRhumato.fr
+# Chaque matin : collecte les rapports Deep Research reçus par e-mail
+# (tâches planifiées ChatGPT + Gemini), fait faire une recherche complémentaire
+# et une synthèse comparative par Claude, publie sur le site et envoie par e-mail.
+#
+# Secrets à configurer (Settings → Secrets and variables → Actions) :
+#   GMAIL_USER               — adresse Gmail
+#   GMAIL_APP_PASSWORD       — mot de passe d'application Google
+#   CLAUDE_CODE_OAUTH_TOKEN  — jeton d'abonnement Claude (commande : claude setup-token)
+
+name: Veille quotidienne multi-IA
+
+on:
+  schedule:
+    - cron: "23 6 * * *" # tous les jours ~08h23 Paris (06:23 UTC) — après les tâches ChatGPT/Gemini de 6h
+  workflow_dispatch: {} # lancement manuel possible depuis l'onglet Actions
+
+permissions:
+  contents: write
+
+env:
+  SITE_URL: https://monrhumato.fr # adapter si le domaine change
+
+jobs:
+  veille:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Collecte des rapports e-mail (ChatGPT / Gemini)
+        continue-on-error: true # si Gmail est indisponible, Claude fait quand même sa propre veille
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python scripts/collecte-emails.py
+
+      - name: Synthèse comparative par Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch"
+          prompt: |
+            Tu prépares la synthèse quotidienne de veille pour MonRhumato.fr, en FRANÇAIS.
+            Le point de départ est la liste des actualités récentes du site.
+
+            Étapes :
+            1. Récupère la mission du jour : ${{ env.SITE_URL }}/api/mission-veille
+               (via WebFetch ou curl). Elle liste les actualités du site à traiter et les
+               instructions (approfondir, retrouver la source primaire, traduire, résumer).
+            2. Lis tous les fichiers de rapports/inbox/ : ce sont les rapports Deep Research
+               que ChatGPT et Gemini ont produits sur CETTE MÊME liste d'actualités, reçus
+               par e-mail. S'il n'y en a aucun, note-le et poursuis.
+            3. Fais ta PROPRE recherche pour chaque actualité de la liste : source primaire
+               (PubMed via https://eutils.ncbi.nlm.nih.gov/entrez/eutils/ avec WebFetch ou
+               curl, DOI, communiqués), contexte, chiffres clés, limites.
+            4. Rédige rapports/AAAA-MM-JJ-synthese.md (date du jour, commande `date +%F`),
+               avec UNE SECTION PAR ACTUALITÉ du site (mêmes titres, même ordre) :
+               - **En bref** — 2 phrases grand public
+               - **Pour le clinicien** — implications pratiques pour un rhumatologue
+               - **Détails** — approfondissement traduit en français, sourcé
+               - **Regards croisés** — ce que ChatGPT, Gemini et toi (Claude) avez trouvé :
+                 convergences, divergences, apports propres (omets si aucun rapport reçu)
+               Termine par « ## Autres actualités notables du jour » et « ## Sources ».
+               Sois factuel et cite systématiquement tes sources.
+               Si la liste du jour est identique à la dernière synthèse de rapports/
+               (aucune actualité nouvelle), écris une synthèse brève signalant l'absence
+               de nouveauté plutôt que de répéter le contenu de la veille.
+            5. Mets à jour rapports/index.json : ajoute EN PREMIÈRE POSITION
+               {"date": "AAAA-MM-JJ", "file": "rapports/AAAA-MM-JJ-synthese.md",
+                "titre": "titre court du jour"} — conserve les entrées existantes.
+            6. Supprime les fichiers traités de rapports/inbox/ (pas le .gitkeep).
+
+            NE fais AUCUN commit ni push : l'étape suivante du workflow s'en charge.
+
+      - name: Publication sur le site (commit → redéploiement Vercel)
+        run: |
+          git config user.name "veille-bot"
+          git config user.email "veille-bot@users.noreply.github.com"
+          git add -A rapports
+          git diff --cached --quiet && echo "Aucune nouvelle synthèse." && exit 0
+          git commit -m "Veille quotidienne : synthèse du $(date +%F)"
+          git push
+
+      - name: Envoi de la synthèse par e-mail
+        continue-on-error: true
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python scripts/envoi-email.py
