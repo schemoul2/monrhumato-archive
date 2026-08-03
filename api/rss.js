@@ -154,3 +154,7 @@ module.exports = async function handler(req, res) {
 
   res.status(200).json({ articles, failed, total: articles.length });
 };
+
+// Réutilisés par scripts/genere-mission.js (génération de mission.txt hors Vercel)
+module.exports.SOURCES = SOURCES;
+module.exports.fetchSource = fetchSource;
