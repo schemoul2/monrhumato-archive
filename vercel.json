@@ -7,6 +7,10 @@
     "api/recommandations.js": {
       "memory": 512,
       "maxDuration": 15
+    },
+    "api/mission-veille.js": {
+      "memory": 512,
+      "maxDuration": 30
     }
   }
 }

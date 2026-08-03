@@ -19,10 +19,7 @@ permissions:
   contents: write
 
 env:
-  SUJET_VEILLE: >-
-    Actualités marquantes de la semaine en rhumatologie : nouvelles publications
-    (essais randomisés, méta-analyses), recommandations de sociétés savantes
-    (EULAR, ACR, SFR, HAS), alertes de sécurité des traitements.
+  SITE_URL: https://monrhumato.fr # adapter si le domaine change
 
 jobs:
   veille:
@@ -48,27 +45,31 @@ jobs:
           claude_args: --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch"
           prompt: |
             Tu prépares la synthèse hebdomadaire de veille pour MonRhumato.fr, en FRANÇAIS.
-
-            Sujet de la veille : ${{ env.SUJET_VEILLE }}
+            Le point de départ est la liste des actualités publiées cette semaine sur le site.
 
             Étapes :
-            1. Lis tous les fichiers de rapports/inbox/ : ce sont les rapports Deep Research
-               de la semaine produits par ChatGPT et Gemini, reçus par e-mail. S'il n'y en a
-               aucun, note-le et poursuis.
-            2. Fais ta PROPRE recherche complémentaire sur le sujet (WebSearch, et PubMed via
-               https://eutils.ncbi.nlm.nih.gov/entrez/eutils/ avec WebFetch ou curl) : publications
-               et annonces des 7 derniers jours uniquement.
-            3. Rédige rapports/AAAA-MM-JJ-synthese.md (date du jour, commande `date +%F`) :
-               - ## L'essentiel de la semaine — 5 à 10 points clés avec sources
-               - ## Synthèse comparative — ce que ChatGPT, Gemini et toi (Claude) avez trouvé :
-                 convergences, divergences, apports propres à chaque moteur
-               - ## Détails par thème — avec liens/références cliquables
-               - ## Sources
+            1. Récupère la mission de la semaine : ${{ env.SITE_URL }}/api/mission-veille
+               (via WebFetch ou curl). Elle liste les actualités du site à traiter et les
+               instructions (approfondir, retrouver la source primaire, traduire, résumer).
+            2. Lis tous les fichiers de rapports/inbox/ : ce sont les rapports Deep Research
+               que ChatGPT et Gemini ont produits sur CETTE MÊME liste d'actualités, reçus
+               par e-mail. S'il n'y en a aucun, note-le et poursuis.
+            3. Fais ta PROPRE recherche pour chaque actualité de la liste : source primaire
+               (PubMed via https://eutils.ncbi.nlm.nih.gov/entrez/eutils/ avec WebFetch ou
+               curl, DOI, communiqués), contexte, chiffres clés, limites.
+            4. Rédige rapports/AAAA-MM-JJ-synthese.md (date du jour, commande `date +%F`),
+               avec UNE SECTION PAR ACTUALITÉ du site (mêmes titres, même ordre) :
+               - **En bref** — 2 phrases grand public
+               - **Pour le clinicien** — implications pratiques pour un rhumatologue
+               - **Détails** — approfondissement traduit en français, sourcé
+               - **Regards croisés** — ce que ChatGPT, Gemini et toi (Claude) avez trouvé :
+                 convergences, divergences, apports propres (omets si aucun rapport reçu)
+               Termine par « ## Autres actualités notables de la semaine » et « ## Sources ».
                Sois factuel et cite systématiquement tes sources.
-            4. Mets à jour rapports/index.json : ajoute EN PREMIÈRE POSITION
+            5. Mets à jour rapports/index.json : ajoute EN PREMIÈRE POSITION
                {"date": "AAAA-MM-JJ", "file": "rapports/AAAA-MM-JJ-synthese.md",
                 "titre": "titre court de la semaine"} — conserve les entrées existantes.
-            5. Supprime les fichiers traités de rapports/inbox/ (pas le .gitkeep).
+            6. Supprime les fichiers traités de rapports/inbox/ (pas le .gitkeep).
 
             NE fais AUCUN commit ni push : l'étape suivante du workflow s'en charge.
 

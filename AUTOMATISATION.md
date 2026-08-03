@@ -4,15 +4,28 @@ Pipeline entièrement automatique utilisant **uniquement vos abonnements existan
 (ChatGPT Plus, Google AI Pro, Claude) et des services gratuits (Gmail, GitHub Actions, Vercel).
 Aucune API payante.
 
-## Comment ça marche
+## Comment ça marche — l'aller-retour site ↔ IA
+
+Le point de départ est **votre propre site** : la page `/api/mission-veille` liste
+automatiquement les actualités de la semaine de MonRhumato (issues de `/api/rss` :
+Inserm, Fondation Arthritis, AFLAR, Futura, SFR, PasseportSanté) accompagnées des
+instructions — approfondir chaque actualité, retrouver l'étude source, traduire en
+français, résumer pour le grand public et pour le clinicien.
 
 ```
-Lundi 6h00   ChatGPT (tâche planifiée)  ──courriel──►┐
-Lundi 6h00   Gemini (action programmée) ──courriel──►│  Gmail
-                                                     ▼
-Lundi ~8h23  GitHub Actions (gratuit) :
+                    ┌──── ALLER : les moteurs viennent lire la mission ────┐
+                    │        monrhumato.fr/api/mission-veille              │
+                    │   (actualités de la semaine + instructions)          │
+                    ▼                                                      ▼
+Lundi 6h00   ChatGPT (tâche planifiée)                    Gemini (action programmée)
+             Deep Research sur chaque actualité           Deep Research sur chaque actualité
+                    │                                                      │
+                    └──courriel──►  Gmail  ◄──courriel────────────────────┘
+                                     ▼
+Lundi ~8h23  RETOUR : GitHub Actions (gratuit) :
              1. collecte-emails.py  → lit les rapports dans Gmail (IMAP)
-             2. Claude (abonnement) → recherche complémentaire + synthèse comparative
+             2. Claude (abonnement) → relit la même liste d'actualités, ajoute sa
+                propre recherche, croise les 3 regards → synthèse PAR ARTICLE
              3. commit → Vercel redéploie → visible sur /rapports.html
              4. envoi-email.py      → la synthèse arrive dans votre boîte mail
 ```
@@ -27,11 +40,12 @@ sur votre site.
 
 Dans l'application ChatGPT, demandez simplement :
 
-> Crée une tâche planifiée : chaque lundi à 6h00, effectue une recherche approfondie
-> (Deep Research) sur les actualités marquantes de la semaine écoulée en rhumatologie :
-> nouvelles publications (essais randomisés, méta-analyses), recommandations des sociétés
-> savantes (EULAR, ACR, SFR, HAS), alertes de sécurité des traitements. Rapport complet
-> avec citations. Envoie-moi le résultat par e-mail.
+> Crée une tâche planifiée : chaque lundi à 6h00, ouvre la page
+> https://monrhumato.fr/api/mission-veille — elle liste les actualités de la semaine
+> de mon site et les instructions. Effectue une recherche approfondie (Deep Research)
+> en suivant exactement cette mission : pour chaque actualité listée, retrouve l'étude
+> source, approfondis, traduis en français et résume comme demandé. Envoie-moi le
+> rapport complet par e-mail.
 
 Vérifiez dans Réglages → Notifications que les notifications par e-mail des tâches sont activées.
 
@@ -39,9 +53,11 @@ Vérifiez dans Réglages → Notifications que les notifications par e-mail des 
 
 Dans l'application Gemini :
 
-> Chaque lundi à 6h00, fais une recherche approfondie (Deep Research) sur les actualités
-> de la semaine en rhumatologie : publications majeures, recommandations EULAR/ACR/SFR/HAS,
-> alertes de sécurité des traitements. Rapport détaillé et sourcé, envoyé par e-mail.
+> Chaque lundi à 6h00, ouvre https://monrhumato.fr/api/mission-veille — la page liste
+> les actualités de la semaine de mon site et les instructions à suivre. Fais une
+> recherche approfondie (Deep Research) en exécutant cette mission : pour chaque
+> actualité, source primaire, approfondissement, traduction en français et résumés
+> demandés. Rapport détaillé et sourcé, envoyé par e-mail.
 
 (Les actions programmées se gèrent ensuite dans Paramètres → Actions programmées.
 Activez les notifications par e-mail.)
@@ -69,8 +85,11 @@ onglet **Actions** → « Veille hebdomadaire multi-IA » → **Run workflow**.
 
 ## Personnalisation
 
-- **Sujet de veille** : variable `SUJET_VEILLE` dans `.github/workflows/veille-hebdo.yml`
-  (adaptez aussi les prompts de vos tâches ChatGPT/Gemini pour rester cohérent).
+- **Contenu de la mission** : instructions et nombre d'articles dans
+  `api/mission-veille.js` — c'est LE point central : le modifier change ce que les
+  trois moteurs font chaque semaine, sans toucher aux tâches ChatGPT/Gemini.
+- **Domaine du site** : variable `SITE_URL` dans `.github/workflows/veille-hebdo.yml`
+  et URL dans les prompts de vos tâches ChatGPT/Gemini.
 - **Horaire** : ligne `cron:` du workflow (en UTC — Paris = UTC+2 l'été, +1 l'hiver).
   Gardez ~2 h de marge après l'heure des tâches ChatGPT/Gemini.
 - **Filtre e-mail** : par défaut, tout e-mail OpenAI/Google de moins de 8 jours est
