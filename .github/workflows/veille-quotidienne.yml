@@ -1,5 +1,5 @@
-# Veille hebdomadaire multi-IA — MonRhumato.fr
-# Chaque lundi matin : collecte les rapports Deep Research reçus par e-mail
+# Veille quotidienne multi-IA — MonRhumato.fr
+# Chaque matin : collecte les rapports Deep Research reçus par e-mail
 # (tâches planifiées ChatGPT + Gemini), fait faire une recherche complémentaire
 # et une synthèse comparative par Claude, publie sur le site et envoie par e-mail.
 #
@@ -8,11 +8,11 @@
 #   GMAIL_APP_PASSWORD       — mot de passe d'application Google
 #   CLAUDE_CODE_OAUTH_TOKEN  — jeton d'abonnement Claude (commande : claude setup-token)
 
-name: Veille hebdomadaire multi-IA
+name: Veille quotidienne multi-IA
 
 on:
   schedule:
-    - cron: "23 6 * * 1" # lundi ~08h23 Paris (06:23 UTC) — après les tâches ChatGPT/Gemini de 6h
+    - cron: "23 6 * * *" # tous les jours ~08h23 Paris (06:23 UTC) — après les tâches ChatGPT/Gemini de 6h
   workflow_dispatch: {} # lancement manuel possible depuis l'onglet Actions
 
 permissions:
@@ -44,11 +44,11 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch"
           prompt: |
-            Tu prépares la synthèse hebdomadaire de veille pour MonRhumato.fr, en FRANÇAIS.
-            Le point de départ est la liste des actualités publiées cette semaine sur le site.
+            Tu prépares la synthèse quotidienne de veille pour MonRhumato.fr, en FRANÇAIS.
+            Le point de départ est la liste des actualités récentes du site.
 
             Étapes :
-            1. Récupère la mission de la semaine : ${{ env.SITE_URL }}/api/mission-veille
+            1. Récupère la mission du jour : ${{ env.SITE_URL }}/api/mission-veille
                (via WebFetch ou curl). Elle liste les actualités du site à traiter et les
                instructions (approfondir, retrouver la source primaire, traduire, résumer).
             2. Lis tous les fichiers de rapports/inbox/ : ce sont les rapports Deep Research
@@ -64,11 +64,14 @@ jobs:
                - **Détails** — approfondissement traduit en français, sourcé
                - **Regards croisés** — ce que ChatGPT, Gemini et toi (Claude) avez trouvé :
                  convergences, divergences, apports propres (omets si aucun rapport reçu)
-               Termine par « ## Autres actualités notables de la semaine » et « ## Sources ».
+               Termine par « ## Autres actualités notables du jour » et « ## Sources ».
                Sois factuel et cite systématiquement tes sources.
+               Si la liste du jour est identique à la dernière synthèse de rapports/
+               (aucune actualité nouvelle), écris une synthèse brève signalant l'absence
+               de nouveauté plutôt que de répéter le contenu de la veille.
             5. Mets à jour rapports/index.json : ajoute EN PREMIÈRE POSITION
                {"date": "AAAA-MM-JJ", "file": "rapports/AAAA-MM-JJ-synthese.md",
-                "titre": "titre court de la semaine"} — conserve les entrées existantes.
+                "titre": "titre court du jour"} — conserve les entrées existantes.
             6. Supprime les fichiers traités de rapports/inbox/ (pas le .gitkeep).
 
             NE fais AUCUN commit ni push : l'étape suivante du workflow s'en charge.
@@ -79,7 +82,7 @@ jobs:
           git config user.email "veille-bot@users.noreply.github.com"
           git add -A rapports
           git diff --cached --quiet && echo "Aucune nouvelle synthèse." && exit 0
-          git commit -m "Veille hebdomadaire : synthèse du $(date +%F)"
+          git commit -m "Veille quotidienne : synthèse du $(date +%F)"
           git push
 
       - name: Envoi de la synthèse par e-mail

@@ -5,7 +5,7 @@
 # Variables d'environnement :
 #   GMAIL_USER          — adresse Gmail complète
 #   GMAIL_APP_PASSWORD  — mot de passe d'application (https://myaccount.google.com/apppasswords)
-#   GMAIL_QUERY         — requête Gmail (optionnelle) ; défaut : e-mails OpenAI/Google < 8 jours
+#   GMAIL_QUERY         — requête Gmail (optionnelle) ; défaut : e-mails OpenAI/Google < 24 h
 
 import email
 import html
@@ -17,7 +17,7 @@ from email.header import decode_header, make_header
 
 USER = os.environ["GMAIL_USER"]
 PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
-QUERY = os.environ.get("GMAIL_QUERY", "newer_than:8d (from:openai.com OR from:google.com)")
+QUERY = os.environ.get("GMAIL_QUERY", "newer_than:1d (from:openai.com OR from:google.com)")
 OUT = pathlib.Path("rapports/inbox")
 OUT.mkdir(parents=True, exist_ok=True)
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Veille hebdomadaire — MonRhumato</title>
+<title>Veille quotidienne — MonRhumato</title>
 <style>
   :root { --teal:#2dc4b5; --teal-dark:#1fa396; --ink:#1e2a32; --muted:#67757e; --bg:#f4f7f8; --card:#ffffff; --border:#e2e9ec; }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -31,8 +31,8 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>📚 Veille hebdomadaire multi-IA</h1>
-    <p>Synthèses comparatives des recherches approfondies ChatGPT, Gemini et Claude, publiées automatiquement chaque lundi.</p>
+    <h1>📚 Veille quotidienne multi-IA</h1>
+    <p>Synthèses comparatives des recherches approfondies ChatGPT, Gemini et Claude, publiées automatiquement chaque matin.</p>
   </header>
   <div class="card" id="content"><p class="empty">Chargement…</p></div>
 </div>
@@ -58,7 +58,7 @@ function md(src) {
 function showList() {
   $("#content").innerHTML = index.length
     ? index.map((r, i) => `<div class="item" onclick="showReport(${i})"><b>${esc(r.titre || "Synthèse")}</b><small>${esc(r.date)}</small></div>`).join("")
-    : '<p class="empty">Aucune synthèse publiée pour le moment — la première arrivera lundi prochain.</p>';
+    : '<p class="empty">Aucune synthèse publiée pour le moment — la première arrivera demain matin.</p>';
 }
 
 async function showReport(i) {

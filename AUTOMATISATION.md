@@ -7,7 +7,7 @@ Aucune API payante.
 ## Comment ça marche — l'aller-retour site ↔ IA
 
 Le point de départ est **votre propre site** : la page `/api/mission-veille` liste
-automatiquement les actualités de la semaine de MonRhumato (issues de `/api/rss` :
+automatiquement les actualités récentes de MonRhumato (issues de `/api/rss` :
 Inserm, Fondation Arthritis, AFLAR, Futura, SFR, PasseportSanté) accompagnées des
 instructions — approfondir chaque actualité, retrouver l'étude source, traduire en
 français, résumer pour le grand public et pour le clinicien.
@@ -15,14 +15,14 @@ français, résumer pour le grand public et pour le clinicien.
 ```
                     ┌──── ALLER : les moteurs viennent lire la mission ────┐
                     │        monrhumato.fr/api/mission-veille              │
-                    │   (actualités de la semaine + instructions)          │
+                    │      (actualités récentes + instructions)            │
                     ▼                                                      ▼
-Lundi 6h00   ChatGPT (tâche planifiée)                    Gemini (action programmée)
+6h00 chaque jour  ChatGPT (tâche planifiée)               Gemini (action programmée)
              Deep Research sur chaque actualité           Deep Research sur chaque actualité
                     │                                                      │
                     └──courriel──►  Gmail  ◄──courriel────────────────────┘
                                      ▼
-Lundi ~8h23  RETOUR : GitHub Actions (gratuit) :
+~8h23 chaque jour  RETOUR : GitHub Actions (gratuit) :
              1. collecte-emails.py  → lit les rapports dans Gmail (IMAP)
              2. Claude (abonnement) → relit la même liste d'actualités, ajoute sa
                 propre recherche, croise les 3 regards → synthèse PAR ARTICLE
@@ -31,7 +31,7 @@ Lundi ~8h23  RETOUR : GitHub Actions (gratuit) :
 ```
 
 Après la configuration initiale (~20 minutes, une seule fois), **tout tourne seul
-chaque semaine** : vous recevez la synthèse comparative par e-mail et elle s'archive
+chaque jour** : vous recevez la synthèse comparative par e-mail et elle s'archive
 sur votre site.
 
 ## Configuration initiale (une seule fois)
@@ -40,8 +40,8 @@ sur votre site.
 
 Dans l'application ChatGPT, demandez simplement :
 
-> Crée une tâche planifiée : chaque lundi à 6h00, ouvre la page
-> https://monrhumato.fr/api/mission-veille — elle liste les actualités de la semaine
+> Crée une tâche planifiée : chaque jour à 6h00, ouvre la page
+> https://monrhumato.fr/api/mission-veille — elle liste les actualités récentes
 > de mon site et les instructions. Effectue une recherche approfondie (Deep Research)
 > en suivant exactement cette mission : pour chaque actualité listée, retrouve l'étude
 > source, approfondis, traduis en français et résume comme demandé. Envoie-moi le
@@ -53,8 +53,8 @@ Vérifiez dans Réglages → Notifications que les notifications par e-mail des 
 
 Dans l'application Gemini :
 
-> Chaque lundi à 6h00, ouvre https://monrhumato.fr/api/mission-veille — la page liste
-> les actualités de la semaine de mon site et les instructions à suivre. Fais une
+> Chaque jour à 6h00, ouvre https://monrhumato.fr/api/mission-veille — la page liste
+> les actualités récentes de mon site et les instructions à suivre. Fais une
 > recherche approfondie (Deep Research) en exécutant cette mission : pour chaque
 > actualité, source primaire, approfondissement, traduction en français et résumés
 > demandés. Rapport détaillé et sourcé, envoyé par e-mail.
@@ -79,20 +79,20 @@ Activez les notifications par e-mail.)
 
 ### 5. Activer
 
-Fusionnez cette branche dans `main`. Le workflow `Veille hebdomadaire multi-IA`
-tournera chaque lundi (~8h23, heure de Paris). Pour tester immédiatement :
-onglet **Actions** → « Veille hebdomadaire multi-IA » → **Run workflow**.
+Fusionnez cette branche dans `main`. Le workflow `Veille quotidienne multi-IA`
+tournera chaque jour (~8h23, heure de Paris). Pour tester immédiatement :
+onglet **Actions** → « Veille quotidienne multi-IA » → **Run workflow**.
 
 ## Personnalisation
 
 - **Contenu de la mission** : instructions et nombre d'articles dans
   `api/mission-veille.js` — c'est LE point central : le modifier change ce que les
-  trois moteurs font chaque semaine, sans toucher aux tâches ChatGPT/Gemini.
-- **Domaine du site** : variable `SITE_URL` dans `.github/workflows/veille-hebdo.yml`
+  trois moteurs font chaque jour, sans toucher aux tâches ChatGPT/Gemini.
+- **Domaine du site** : variable `SITE_URL` dans `.github/workflows/veille-quotidienne.yml`
   et URL dans les prompts de vos tâches ChatGPT/Gemini.
 - **Horaire** : ligne `cron:` du workflow (en UTC — Paris = UTC+2 l'été, +1 l'hiver).
   Gardez ~2 h de marge après l'heure des tâches ChatGPT/Gemini.
-- **Filtre e-mail** : par défaut, tout e-mail OpenAI/Google de moins de 8 jours est
+- **Filtre e-mail** : par défaut, tout e-mail OpenAI/Google de moins de 24 h est
   collecté (les trop courts sont ignorés). Affinez avec la variable d'environnement
   `GMAIL_QUERY` dans le workflow (syntaxe de recherche Gmail).
 
@@ -103,10 +103,16 @@ onglet **Actions** → « Veille hebdomadaire multi-IA » → **Run workflow**.
 | Deep Research ChatGPT (tâche planifiée) | 0 € — quota de l'abonnement Plus |
 | Deep Research Gemini (action programmée) | 0 € — quota Google AI Pro |
 | Recherche + synthèse Claude | 0 € — usage de l'abonnement (jeton OAuth) |
-| GitHub Actions | 0 € — ~5 min/semaine (quota gratuit : 2 000 min/mois) |
+| GitHub Actions | 0 € — ~5 min/jour, soit ~150 min/mois (quota gratuit : 2 000 min/mois) |
 | Gmail (IMAP/SMTP), Vercel | 0 € |
 
 ## Limites connues
+
+- **Quota ChatGPT Plus : 25 Deep Research « complets » par mois.** En rythme quotidien
+  (~30/mois), ChatGPT bascule automatiquement sur sa version légère de Deep Research
+  une fois le quota atteint — la veille continue, simplement moins fouillée en fin de
+  mois. Gemini (Google AI Pro) a des quotas quotidiens compatibles avec un usage
+  journalier, et Claude complète de toute façon chaque jour.
 
 - La richesse des rapports collectés dépend de ce que ChatGPT/Gemini mettent dans leurs
   e-mails de notification (contenu complet ou résumé + lien selon les versions). Le

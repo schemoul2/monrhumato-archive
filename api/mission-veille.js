@@ -1,11 +1,11 @@
 // api/mission-veille.js — MonRhumato.fr
-// Page « mission » lue chaque semaine par les agents Deep Research (ChatGPT, Gemini, Claude).
+// Page « mission » lue chaque jour par les agents Deep Research (ChatGPT, Gemini, Claude).
 // Elle liste les actualités récentes du site (via /api/rss) et donne les instructions
 // d'approfondissement, de traduction et de résumé. C'est l'« aller » de la boucle :
-// les moteurs viennent chercher ici leur travail de la semaine, puis renvoient leur
-// rapport par e-mail (le « retour » est traité par .github/workflows/veille-hebdo.yml).
+// les moteurs viennent chercher ici leur travail du jour, puis renvoient leur
+// rapport par e-mail (le « retour » est traité par .github/workflows/veille-quotidienne.yml).
 
-const JOURS = 8; // fenêtre de fraîcheur des actualités
+const JOURS = 2; // fenêtre de fraîcheur des actualités
 const MAX_ARTICLES = 12;
 
 function buildMission(articles, now = new Date()) {
@@ -21,14 +21,14 @@ function buildMission(articles, now = new Date()) {
    Lien : ${a.link}`;
   }).join("\n\n");
 
-  return `MISSION DE VEILLE HEBDOMADAIRE — MonRhumato.fr
+  return `MISSION DE VEILLE QUOTIDIENNE — MonRhumato.fr
 Générée le ${now.toISOString().slice(0, 10)} — ${liste.length} actualité(s)${recents.length ? " des " + JOURS + " derniers jours" : " (les plus récentes)"}
 
 Tu es chargé(e) d'une recherche approfondie pour MonRhumato.fr, site francophone
 d'information en rhumatologie. Ta mission porte sur les actualités ci-dessous,
-publiées cette semaine sur le site.
+récemment publiées sur le site.
 
-═══ ACTUALITÉS DE LA SEMAINE ═══
+═══ ACTUALITÉS À TRAITER ═══
 
 ${lignes}
 
@@ -48,7 +48,7 @@ Pour CHAQUE actualité ci-dessus :
 5. Cite systématiquement tes sources avec des liens.
 
 FORMAT DU RAPPORT : une section par actualité, dans l'ordre et avec les titres
-ci-dessus. Termine par une section « Autres actualités notables de la semaine »
+ci-dessus. Termine par une section « Autres actualités notables du jour »
 si tes recherches révèlent des sujets majeurs en rhumatologie absents de la liste.
 Rapport intégralement en français.`;
 }

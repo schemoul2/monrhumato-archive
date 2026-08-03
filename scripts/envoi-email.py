@@ -1,5 +1,5 @@
 # scripts/envoi-email.py — MonRhumato.fr
-# Envoie la synthèse hebdomadaire la plus récente (rapports/index.json) à GMAIL_USER
+# Envoie la synthèse quotidienne la plus récente (rapports/index.json) à GMAIL_USER
 # via SMTP Gmail (même mot de passe d'application que la collecte).
 
 import json
