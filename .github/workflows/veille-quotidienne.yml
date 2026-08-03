@@ -18,9 +18,6 @@ on:
 permissions:
   contents: write
 
-env:
-  SITE_URL: https://monrhumato-veille.vercel.app # projet Vercel dédié à la veille (dépôt monrhumato-archive)
-
 jobs:
   veille:
     runs-on: ubuntu-latest
@@ -48,9 +45,11 @@ jobs:
             Le point de départ est la liste des actualités récentes du site.
 
             Étapes :
-            1. Récupère la mission du jour : ${{ env.SITE_URL }}/api/mission-veille
-               (via WebFetch ou curl). Elle liste les actualités du site à traiter et les
-               instructions (approfondir, retrouver la source primaire, traduire, résumer).
+            1. Lis la mission du jour : fichier mission.txt à la racine du dépôt. Elle
+               liste les actualités à traiter et les instructions (approfondir, retrouver
+               la source primaire, traduire, résumer). Si mission.txt est absent ou date
+               de plus de 24 h (vérifie la date en tête du fichier), régénère-le avec
+               `node scripts/genere-mission.js`.
             2. Lis tous les fichiers de rapports/inbox/ : ce sont les rapports Deep Research
                que ChatGPT et Gemini ont produits sur CETTE MÊME liste d'actualités, reçus
                par e-mail. S'il n'y en a aucun, note-le et poursuis.

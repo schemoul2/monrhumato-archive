@@ -6,18 +6,19 @@ Aucune API payante.
 
 ## Comment ça marche — l'aller-retour site ↔ IA
 
-Le point de départ est **votre flux d'actualités** : la page
-`https://monrhumato-veille.vercel.app/api/mission-veille` (projet Vercel dédié,
-déployé depuis ce dépôt `monrhumato-archive`) liste
-automatiquement les actualités récentes de MonRhumato (issues de `/api/rss` :
-Inserm, Fondation Arthritis, AFLAR, Futura, SFR, PasseportSanté) accompagnées des
+Le point de départ est **votre flux d'actualités** : chaque matin à ~5h23, un
+premier workflow GitHub agrège les actualités rhumato (Inserm, Fondation
+Arthritis, AFLAR, Futura, SFR, PasseportSanté) et publie la « mission du jour »
+dans ce dépôt public :
+`https://raw.githubusercontent.com/schemoul2/monrhumato-archive/main/mission.txt`
+Elle liste les actualités récentes accompagnées des
 instructions — approfondir chaque actualité, retrouver l'étude source, traduire en
 français, résumer pour le grand public et pour le clinicien.
 
 ```
+~5h23 chaque jour  GitHub Actions publie mission.txt (actualités + instructions)
                     ┌──── ALLER : les moteurs viennent lire la mission ────┐
-                    │   monrhumato-veille.vercel.app/api/mission-veille    │
-                    │      (actualités récentes + instructions)            │
+                    │    raw.githubusercontent.com/…/main/mission.txt      │
                     ▼                                                      ▼
 6h00 chaque jour  ChatGPT (tâche planifiée)               Gemini (action programmée)
              Deep Research sur chaque actualité           Deep Research sur chaque actualité
@@ -28,8 +29,7 @@ français, résumer pour le grand public et pour le clinicien.
              1. collecte-emails.py  → lit les rapports dans Gmail (IMAP)
              2. Claude (abonnement) → relit la même liste d'actualités, ajoute sa
                 propre recherche, croise les 3 regards → synthèse PAR ARTICLE
-             3. commit sur GitHub → visible aussitôt sur
-                monrhumato-veille.vercel.app/rapports.html (lecture directe GitHub)
+             3. commit sur GitHub → synthèses archivées dans rapports/ (dépôt public)
              4. envoi-email.py      → la synthèse arrive dans votre boîte mail
 ```
 
@@ -44,7 +44,7 @@ sur votre site.
 Dans l'application ChatGPT, demandez simplement :
 
 > Crée une tâche planifiée : chaque jour à 6h00, ouvre la page
-> https://monrhumato-veille.vercel.app/api/mission-veille — elle liste les actualités récentes
+> https://raw.githubusercontent.com/schemoul2/monrhumato-archive/main/mission.txt — elle liste les actualités récentes
 > de mon site et les instructions. Effectue une recherche approfondie (Deep Research)
 > en suivant exactement cette mission : pour chaque actualité listée, retrouve l'étude
 > source, approfondis, traduis en français et résume comme demandé. Envoie-moi le
@@ -56,7 +56,7 @@ Vérifiez dans Réglages → Notifications que les notifications par e-mail des 
 
 Dans l'application Gemini :
 
-> Chaque jour à 6h00, ouvre https://monrhumato-veille.vercel.app/api/mission-veille — la page liste
+> Chaque jour à 6h00, ouvre https://raw.githubusercontent.com/schemoul2/monrhumato-archive/main/mission.txt — la page liste
 > les actualités récentes de mon site et les instructions à suivre. Fais une
 > recherche approfondie (Deep Research) en exécutant cette mission : pour chaque
 > actualité, source primaire, approfondissement, traduction en français et résumés
@@ -86,23 +86,25 @@ Une fois les secrets en place, le workflow `Veille quotidienne multi-IA` tourne
 chaque jour (~8h23, heure de Paris). Pour tester immédiatement : onglet
 **Actions** → « Veille quotidienne multi-IA » → **Run workflow**.
 
-Note d'hébergement : la veille vit sur son propre projet Vercel
-(`monrhumato-veille`, déployé depuis ce dépôt), indépendant du site principal
-monrhumato.fr (projet `monrhumato-f5x3`, dépôt `monrhumato`). Les rapports sont
-lus en direct depuis GitHub — aucun redéploiement nécessaire au quotidien. Si un
-jour vous modifiez les fichiers `api/*` ou les pages HTML, redéployez le projet
-(ou reliez ce dépôt au projet Vercel dans le tableau de bord pour que ce soit
-automatique).
+Note d'hébergement : la boucle tourne entièrement sur GitHub (dépôt public) —
+aucun hébergeur requis. Les synthèses sont archivées dans `rapports/` et
+arrivent par e-mail chaque matin. Optionnel : pour une jolie page de
+consultation (`rapports.html`) et l'endpoint dynamique `api/mission-veille`,
+importez ce dépôt comme projet dans le tableau de bord Vercel (Add New →
+Project → `monrhumato-archive`) — la page lit les rapports en direct depuis
+GitHub, aucun redéploiement quotidien nécessaire. Le site principal
+monrhumato.fr (projet `monrhumato-f5x3`, dépôt `monrhumato`) n'est pas touché.
 
 ## Personnalisation
 
 - **Contenu de la mission** : instructions et nombre d'articles dans
   `api/mission-veille.js` — c'est LE point central : le modifier change ce que les
   trois moteurs font chaque jour, sans toucher aux tâches ChatGPT/Gemini.
-- **Domaine du site** : variable `SITE_URL` dans `.github/workflows/veille-quotidienne.yml`
-  et URL dans les prompts de vos tâches ChatGPT/Gemini.
-- **Horaire** : ligne `cron:` du workflow (en UTC — Paris = UTC+2 l'été, +1 l'hiver).
-  Gardez ~2 h de marge après l'heure des tâches ChatGPT/Gemini.
+- **Horaire de la mission** : cron de `.github/workflows/genere-mission.yml`
+  (elle doit être publiée avant l'heure des tâches ChatGPT/Gemini).
+- **Horaire de la synthèse** : cron de `.github/workflows/veille-quotidienne.yml`
+  (en UTC — Paris = UTC+2 l'été, +1 l'hiver). Gardez ~2 h de marge après l'heure
+  des tâches ChatGPT/Gemini.
 - **Filtre e-mail** : par défaut, tout e-mail OpenAI/Google de moins de 24 h est
   collecté (les trop courts sont ignorés). Affinez avec la variable d'environnement
   `GMAIL_QUERY` dans le workflow (syntaxe de recherche Gmail).
@@ -115,7 +117,7 @@ automatique).
 | Deep Research Gemini (action programmée) | 0 € — quota Google AI Pro |
 | Recherche + synthèse Claude | 0 € — usage de l'abonnement (jeton OAuth) |
 | GitHub Actions | 0 € — ~5 min/jour, soit ~150 min/mois (quota gratuit : 2 000 min/mois) |
-| Gmail (IMAP/SMTP), Vercel (projet dédié) | 0 € |
+| Gmail (IMAP/SMTP), GitHub (dépôt public) | 0 € |
 
 ## Limites connues
 
