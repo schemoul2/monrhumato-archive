@@ -70,4 +70,4 @@ Produit `journal/index.json`, trié du plus récent au plus ancien :
 
 ## Statut
 
-En attente de la première dictée.
+Première entrée : 2026-08-06.
