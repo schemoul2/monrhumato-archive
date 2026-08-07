@@ -1,7 +1,8 @@
 // scripts/genere-journal.js — Julien App
 // Génère journal/index.json à partir des entrées dictées de journal/entrees/.
-// Seule la section « Relu » (et « Notes ») est publiée : le « Brut » reste
-// archivé dans le dépôt mais n'est jamais exposé à l'application.
+// Seule la section « Relu » est publiée. Le « Brut » (trace de la dictée) et
+// les « Notes » (pense-bête de transcription) restent archivés dans le dépôt
+// mais ne sont jamais exposés à l'application.
 
 const fs = require("fs");
 const path = require("path");
@@ -55,12 +56,10 @@ function main() {
       continue;
     }
 
-    const notes = section(md, "Notes");
     entrees.push({
       date,
       titre: libelleDate(date),
       texte,
-      ...(notes ? { notes } : {}),
       mots: compteMots(texte),
       source: `journal/entrees/${fichier}`,
     });

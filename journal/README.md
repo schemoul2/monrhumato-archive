@@ -24,10 +24,20 @@ Ce dossier sert à collecter, au fil du temps, le contenu qui alimentera le
 3. **`## Relu` est ce que lit l'app.** C'est le même contenu, ponctué et
    découpé, sans réécriture du fond. Une entrée sans `## Relu` n'est pas
    indexée.
-4. **Rien n'est supprimé.** Si un passage semble hors sujet, il reste — il
-   servira peut-être plus tard.
-5. **Pas d'interprétation ajoutée.** Aucune conclusion, aucun résumé
-   psychologisant qui n'est pas dans le texte d'origine.
+4. **On livre une version lisible du premier coup.** Aucune question n'est
+   posée avant publication, aucun marqueur d'incertitude (`[?]`, « à
+   confirmer ») n'apparaît dans le carnet. Quand la dictée est mal
+   retranscrite, on tranche : on retient l'interprétation la plus plausible
+   au vu du contexte. Une correction ultérieure est toujours possible, mais
+   elle n'est pas attendue — l'entrée doit se tenir seule.
+5. **Un passage incompréhensible est écarté de la relecture**, jamais
+   remplacé par une approximation bancale. Il reste intact dans le `## Brut`.
+6. **`## Notes` est un pense-bête interne**, non publié : décisions de
+   transcription, hypothèses retenues, noms à vérifier. C'est là et nulle part
+   ailleurs que vivent les incertitudes.
+7. **Pas d'interprétation ajoutée.** Trancher une transcription douteuse, oui ;
+   ajouter un fait, une conclusion ou un résumé psychologisant absent du texte
+   d'origine, non.
 
 ## Format d'une entrée
 
@@ -44,7 +54,8 @@ Ce dossier sert à collecter, au fil du temps, le contenu qui alimentera le
 
 ## Notes
 
-<contexte, personnes citées, sujets à reprendre — optionnel, publié>
+<pense-bête interne : décisions de transcription, hypothèses, noms à
+vérifier — archivé, non publié>
 ```
 
 ## Génération de l'index
@@ -61,7 +72,6 @@ Produit `journal/index.json`, trié du plus récent au plus ancien :
     "date": "2026-08-07",
     "titre": "7 août 2026",
     "texte": "…",
-    "notes": "…",
     "mots": 214,
     "source": "journal/entrees/2026-08-07.md"
   }
