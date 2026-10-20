@@ -1,5 +1,5 @@
 MISSION DE VEILLE QUOTIDIENNE — MonRhumato.fr
-Générée le 2026-10-19 — 1 actualité(s) des 2 derniers jours
+Générée le 2026-10-20 — 2 actualité(s) des 2 derniers jours
 
 Tu es chargé(e) d'une recherche approfondie pour MonRhumato.fr, site francophone
 d'information en rhumatologie. Ta mission porte sur les actualités ci-dessous,
@@ -7,7 +7,12 @@ récemment publiées sur le site.
 
 ═══ ACTUALITÉS À TRAITER ═══
 
-1. Biothérapie : guérir avec l’ARN
+1. Douleur chronique : nous passons à l’action !
+   Source : AFLAR — 2026-10-19
+   Résumé initial : À l’Assemblée nationale, le colloque « Douleur et rhumatismes », organisé pour la Journée mondiale des rhumatismes, porte une urgence : mieux soulager les plus de 20 millions de Français concernés
+   Lien : https://www.aflar.org/2026/10/19/douleur-chronique-nous-passons-a-laction/
+
+2. Biothérapie : guérir avec l’ARN
    Source : Inserm — 2026-10-19
    Résumé initial : Lancé en 2025, le projet ReNAissance ambitionne d’industrialiser l’ARN pour la biothérapie
    Lien : https://www.inserm.fr/actualite/biotherapie-guerir-avec-larn/
